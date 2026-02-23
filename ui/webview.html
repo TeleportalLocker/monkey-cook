@@ -245,7 +245,6 @@
           const stepClasses = (done ? ' done' : '') + (skipped ? ' skipped' : '') + (echec ? ' echec' : '');
           if (canToggle) {
             var actions = '';
-            if (canRun) actions += '<button class="btn-run" type="button" title="Exécuter"><span class="codicon codicon-play"></span></button>';
             actions += '<button class="btn-valid" type="button" title="Validé"><span class="codicon codicon-pass"></span></button><button class="btn-passe" type="button" title="Passé"><span class="codicon codicon-skip"></span></button><button class="btn-echec" type="button" title="Échec"><span class="codicon codicon-error"></span></button>';
             html += '<div class="step' + stepClasses + '" data-step-id="' + step.id + '" data-category-id="' + cat.id + '" data-can-toggle="true">' +
               '<span class="step-name"> <span class="codicon codicon-circle-small"></span> ' + escapeHtml(step.name) + '</span>' +
