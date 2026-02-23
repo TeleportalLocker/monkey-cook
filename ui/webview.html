@@ -85,14 +85,14 @@
     .step-actions .btn-run:hover { color: var(--vscode-testing-iconPassed); }
     .step-actions .btn-test:hover { color: var(--vscode-editorInfo-foreground); }
     /* Task mode: current step highlight + colored action buttons with darker hover */
-    .step[data-can-toggle="true"] .step-actions button { border-radius: 3px; padding: 4px 5px; transition: filter 0.15s, background 0.15s; }
-    .step[data-can-toggle="true"] .step-actions .btn-run { color: #fff; background: #0e639c; }
+    .step[data-can-toggle="true"] .step-actions button { border-radius: 3px; padding: 4px 5px; transition: filter 0.15s; }
+    .step[data-can-toggle="true"] .step-actions .btn-run { color: #0e639c; }
     .step[data-can-toggle="true"] .step-actions .btn-run:hover { filter: brightness(0.85); }
-    .step[data-can-toggle="true"] .step-actions .btn-valid { color: #fff; background: var(--vscode-testing-iconPassed); }
+    .step[data-can-toggle="true"] .step-actions .btn-valid { color: var(--vscode-testing-iconPassed); }
     .step[data-can-toggle="true"] .step-actions .btn-valid:hover { filter: brightness(0.85); }
-    .step[data-can-toggle="true"] .step-actions .btn-passe { color: #fff; background: var(--vscode-inputValidation-warningBorder); }
+    .step[data-can-toggle="true"] .step-actions .btn-passe { color: var(--vscode-inputValidation-warningBorder); }
     .step[data-can-toggle="true"] .step-actions .btn-passe:hover { filter: brightness(0.85); }
-    .step[data-can-toggle="true"] .step-actions .btn-echec { color: #fff; background: var(--vscode-errorForeground); }
+    .step[data-can-toggle="true"] .step-actions .btn-echec { color: var(--vscode-errorForeground); }
     .step[data-can-toggle="true"] .step-actions .btn-echec:hover { filter: brightness(0.85); }
     .category-stats { font-weight: normal; font-size: 11px; color: var(--vscode-descriptionForeground); margin-left: 6px; display: inline-flex; align-items: center; gap: 8px; }
     .category-stats .stat-ok { color: var(--vscode-testing-iconPassed); }
