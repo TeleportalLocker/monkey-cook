@@ -87,33 +87,66 @@
     .category-stats .stat-skip { color: var(--vscode-inputValidation-warningBorder); }
     .category-stats .stat-fail { color: var(--vscode-errorForeground); }
     .empty { color: var(--vscode-descriptionForeground); font-size: 12px; padding: 8px 0; }
+    .current-step-panel {
+      margin-top: 12px; padding: 10px 12px; background: var(--vscode-editor-inactiveSelectionBackground);
+      border: 1px solid var(--vscode-panel-border); border-radius: 6px; flex-shrink: 0;
+    }
+    .current-step-panel .current-step-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--vscode-descriptionForeground); margin-bottom: 8px; }
+    .current-step-panel .current-step-name { font-weight: 600; font-size: 13px; margin-bottom: 6px; }
+    .current-step-panel .current-step-meta { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-bottom: 8px; font-size: 12px; color: var(--vscode-descriptionForeground); }
+    .current-step-panel .current-step-meta .meta-label { font-weight: 500; color: var(--vscode-foreground); }
+    .current-step-panel .current-step-desc { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 10px; line-height: 1.4; }
+    .current-step-panel .current-step-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .current-step-panel .current-step-actions button { padding: 6px 10px; font-size: 12px; cursor: pointer; border: none; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; }
+    .current-step-panel .current-step-actions .btn-run { background: var(--vscode-button-background); color: var(--vscode-button-foreground); }
+    .current-step-panel .current-step-actions .btn-valid { background: var(--vscode-testing-iconPassed); color: var(--vscode-editor-background); }
+    .current-step-panel .current-step-actions .btn-passe { background: var(--vscode-inputValidation-warningBorder); color: var(--vscode-editor-background); }
+    .current-step-panel .current-step-actions .btn-echec { background: var(--vscode-errorForeground); color: var(--vscode-editor-background); }
+    .current-step-panel .current-step-actions button:hover { opacity: 0.9; }
+    .current-step-panel.all-done .current-step-desc { font-style: italic; }
   </style>
 </head>
 <body>
   <aside class="aside-bar">
-    <div class="aside-title">Monkey Cook</div>
+    <div class="aside-title" id="asideTitle"></div>
     <div class="row">
-      <select id="workflowSelect" title="Workflow actif" aria-label="Sélectionner un workflow">
-        <option value="">-- Choisir un workflow --</option>
+      <select id="workflowSelect">
+        <option value=""></option>
       </select>
     </div>
     <div class="row">
-      <button id="btnCreateWorkflow" class="btn-create" title="Créer un workflow">+ Créer un workflow</button>
+      <button id="btnCreateWorkflow" class="btn-create"></button>
     </div>
     <div class="row">
-      <button id="btnLaunchWorkflow" class="btn-launch" title="Lancer un workflow (créer une tâche)">+ Lancer un workflow</button>
+      <button id="btnLaunchWorkflow" class="btn-launch"></button>
     </div>
   </aside>
   <main class="main">
     <div id="mainTitle" class="main-title-row"></div>
     <div class="toolbar" id="toolbar"></div>
     <div id="content"></div>
+    <div id="currentStepPanel" class="current-step-panel" style="display: none;"></div>
   </main>
   <script>
     const vscode = acquireVsCodeApi();
+    /* eslint-disable no-undef -- placeholders remplacés à l'exécution par l'extension */
     let data = {{INITIAL_DATA}};
+    const L10N = {{L10N}};
+    function t(key) { return (L10N && L10N[key] !== undefined) ? L10N[key] : key; }
+    /* eslint-enable no-undef */
 
     function escapeHtml(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function applyStaticL10n() {
+      document.getElementById('asideTitle').textContent = t('appTitle');
+      const sel = document.getElementById('workflowSelect');
+      sel.title = t('workflowSelectTitle');
+      sel.setAttribute('aria-label', t('workflowSelectAriaLabel'));
+      document.getElementById('btnCreateWorkflow').title = t('createWorkflow');
+      document.getElementById('btnCreateWorkflow').textContent = '+ ' + t('createWorkflow');
+      document.getElementById('btnLaunchWorkflow').title = t('launchWorkflowTitle');
+      document.getElementById('btnLaunchWorkflow').textContent = '+ ' + t('launchWorkflow');
+    }
 
     function isTaskMode() { return !!data.activeTaskId; }
     function getActiveTask() { return (data.tasks || []).find(t => t.id === data.activeTaskId); }
@@ -170,15 +203,35 @@
       });
       return { ok, skip, fail };
     }
+    /** Retourne la première étape non terminée (pas complétée, pas passée, pas en erreur) ou null. */
+    function getCurrentStep(workflow, task) {
+      if (!workflow || !task || !workflow.categories) return null;
+      const completed = task.completedStepIds || [];
+      const skipped = task.skippedStepIds || [];
+      const errorIds = task.errorStepIds || [];
+      for (const cat of workflow.categories) {
+        for (const step of cat.steps || []) {
+          if (completed.indexOf(step.id) < 0 && skipped.indexOf(step.id) < 0 && errorIds.indexOf(step.id) < 0) {
+            return { step, categoryName: cat.name };
+          }
+        }
+      }
+      return null;
+    }
+    function getStepTypeLabel(type) {
+      if (type === 'command') return t('stepTypeCommand');
+      if (type === 'prompt') return t('stepTypePrompt');
+      return t('stepTypeStep');
+    }
 
     function render() {
       const sel = document.getElementById('workflowSelect');
       const currentVal = isTaskMode() ? 'task:' + data.activeTaskId : (data.activeWorkflowId ? 'workflow:' + data.activeWorkflowId : '');
-      sel.innerHTML = '<option value="">-- Choisir --</option>' +
-        '<optgroup label="Workflows (définir)">' +
+      sel.innerHTML = '<option value="">-- ' + t('choose') + ' --</option>' +
+        '<optgroup label="' + t('workflowsDefine') + '">' +
         (data.workflows || []).map(w => '<option value="workflow:' + w.id + '"' + (currentVal === 'workflow:' + w.id ? ' selected' : '') + '>' + escapeHtml(w.name) + '</option>').join('') +
         '</optgroup>' +
-        '<optgroup label="Tâches (suivre)">' +
+        '<optgroup label="' + t('tasksTrack') + '">' +
         (data.tasks || []).map(t => {
           const w = (data.workflows || []).find(w => w.id === t.workflowId);
           const wName = w ? w.name : '?';
@@ -194,12 +247,12 @@
         const stats = getTaskStats(task, workflow);
         let titleHtml = '<h2 style="margin:0;">' + escapeHtml(task.name) + ' — ' + escapeHtml(workflow.name) + '</h2>';
         titleHtml += '<span class="task-stats">' + stats.completed + '/' + stats.total + '</span>';
-        if (stats.skipped > 0) titleHtml += '<span class="task-stats stat-passe"><span class="codicon codicon-pass"></span> ' + stats.skipped + ' passé</span>';
-        if (stats.error > 0) titleHtml += '<span class="task-stats stat-erreur"><span class="codicon codicon-error"></span> ' + stats.error + ' erreur</span>';
-        titleHtml += '<button class="btn-delete-header btn-delete-task" type="button" title="Supprimer la tâche"><span class="codicon codicon-trash"></span> Supprimer</button>';
+        if (stats.skipped > 0) titleHtml += '<span class="task-stats stat-passe"><span class="codicon codicon-pass"></span> ' + stats.skipped + ' ' + t('passed') + '</span>';
+        if (stats.error > 0) titleHtml += '<span class="task-stats stat-erreur"><span class="codicon codicon-error"></span> ' + stats.error + ' ' + t('error') + '</span>';
+        titleHtml += '<button class="btn-delete-header btn-delete-task" type="button" title="' + t('deleteTaskTitle') + '"><span class="codicon codicon-trash"></span> ' + t('deleteTask') + '</button>';
         mainTitleEl.innerHTML = titleHtml;
       } else if (workflow) {
-        mainTitleEl.innerHTML = '<h2 style="margin:0;">' + 'Workflow : ' + escapeHtml(workflow.name) + '</h2><button class="btn-delete-header btn-delete-workflow" type="button" title="Supprimer le workflow"><span class="codicon codicon-trash"></span> Supprimer</button>';
+        mainTitleEl.innerHTML = '<h2 style="margin:0;">' + t('workflowLabel') + ' ' + escapeHtml(workflow.name) + '</h2><button class="btn-delete-header btn-delete-workflow" type="button" title="' + t('deleteWorkflowTitle') + '"><span class="codicon codicon-trash"></span> ' + t('deleteWorkflow') + '</button>';
       } else {
         mainTitleEl.innerHTML = '<h2 style="margin:0;"></h2>';
       }
@@ -209,12 +262,12 @@
       if (isTaskMode()) {
         toolbar.innerHTML = '';
       } else {
-        toolbar.innerHTML = '<button id="btnAddCategory" class="secondary" title="Ajouter une catégorie">+ Catégorie</button>';
+        toolbar.innerHTML = '<button id="btnAddCategory" class="secondary" title="' + t('addCategoryTitle') + '">+ ' + t('category') + '</button>';
         toolbar.querySelector('#btnAddCategory').onclick = function() { vscode.postMessage({ type: 'addCategory' }); };
       }
       const content = document.getElementById('content');
       if (!workflow) {
-        content.innerHTML = '<p class="empty">Sélectionnez un workflow ou une tâche ci-dessus, ou créez-en un / lancez un workflow.</p>';
+        content.innerHTML = '<p class="empty">' + t('emptySelect') + '</p>';
         return;
       }
       let html = '';
@@ -224,15 +277,15 @@
         const catStats = isTaskMode() && task ? getCategoryStats(cat, task) : null;
         html += '<div class="category' + (isCollapsed ? ' collapsed' : '') + '" data-category-id="' + cat.id + '"><div class="category-title">';
         html += '<div class="category-name-row">';
-        html += '<button class="category-toggle" type="button" title="' + (isCollapsed ? 'Déplier' : 'Replier') + '" data-cat-id="' + cat.id + '"><span class="codicon codicon-chevron-down"></span><span class="codicon codicon-chevron-right"></span></button>';
+        html += '<button class="category-toggle" type="button" title="' + (isCollapsed ? t('expand') : t('collapse')) + '" data-cat-id="' + cat.id + '"><span class="codicon codicon-chevron-down"></span><span class="codicon codicon-chevron-right"></span></button>';
         html += '<span>' + escapeHtml(cat.name) + '</span>';
         if (catStats) {
           html += '<span class="category-stats"><span class="stat-ok"><span class="codicon codicon-pass"></span> ' + catStats.ok + '</span><span class="stat-skip"><span class="codicon codicon-skip"></span> ' + catStats.skip + '</span><span class="stat-fail"><span class="codicon codicon-error"></span> ' + catStats.fail + '</span></span>';
         }
         html += '</div>';
         if (!isTaskMode()) {
-          html += '<button class="btnAddStep secondary" data-cat-id="' + cat.id + '" title="Ajouter une étape">+ Étape</button>';
-          html += '<button class="btn-delete-category" type="button" title="Supprimer la catégorie" data-cat-id="' + cat.id + '"><span class="codicon codicon-trash"></span></button>';
+          html += '<button class="btnAddStep secondary" data-cat-id="' + cat.id + '" title="' + t('addStepTitle') + '">+ ' + t('addStep') + '</button>';
+          html += '<button class="btn-delete-category" type="button" title="' + t('deleteCategoryTitle') + '" data-cat-id="' + cat.id + '"><span class="codicon codicon-trash"></span></button>';
         }
         html += '</div><div class="category-body">';
         (cat.steps || []).forEach(step => {
@@ -245,21 +298,58 @@
           const stepClasses = (done ? ' done' : '') + (skipped ? ' skipped' : '') + (echec ? ' echec' : '');
           if (canToggle) {
             var actions = '';
-            if (canRun) actions += '<button class="btn-run" type="button" title="Exécuter"><span class="codicon codicon-play"></span></button>';
-            actions += '<button class="btn-valid" type="button" title="Validé"><span class="codicon codicon-pass"></span></button><button class="btn-passe" type="button" title="Passé"><span class="codicon codicon-skip"></span></button><button class="btn-echec" type="button" title="Échec"><span class="codicon codicon-error"></span></button>';
+            if (canRun) actions += '<button class="btn-run" type="button" title="' + t('execute') + '"><span class="codicon codicon-play"></span></button>';
+            actions += '<button class="btn-valid" type="button" title="' + t('validated') + '"><span class="codicon codicon-pass"></span></button><button class="btn-passe" type="button" title="' + t('skipped') + '"><span class="codicon codicon-skip"></span></button><button class="btn-echec" type="button" title="' + t('failed') + '"><span class="codicon codicon-error"></span></button>';
             html += '<div class="step' + stepClasses + '" data-step-id="' + step.id + '" data-category-id="' + cat.id + '" data-can-toggle="true">' +
               '<span class="step-name"> <span class="codicon codicon-circle-small"></span> ' + escapeHtml(step.name) + '</span>' +
               '<div class="step-actions">' + actions + '</div></div>';
           } else {
             var actions = '';
-            if (stepType === 'command') actions += '<button class="btn-test" type="button" title="Tester si la commande existe"><span class="codicon codicon-debug-alt"></span></button>';
-            actions += '<button class="btn-edit" type="button" title="Éditer"><span class="codicon codicon-edit"></span></button><button class="btn-delete" type="button" title="Supprimer l\'étape"><span class="codicon codicon-trash"></span></button>';
+            if (stepType === 'command') actions += '<button class="btn-test" type="button" title="' + t('testCommandTitle') + '"><span class="codicon codicon-debug-alt"></span></button>';
+            actions += '<button class="btn-edit" type="button" title="' + t('edit') + '"><span class="codicon codicon-edit"></span></button><button class="btn-delete" type="button" title="' + t('deleteStepTitle') + '"><span class="codicon codicon-trash"></span></button>';
             html += '<div class="step' + stepClasses + ' step-view-only" data-step-id="' + step.id + '" data-category-id="' + cat.id + '" data-can-toggle="false"><span class="step-name">' + escapeHtml(step.name) + '</span><div class="step-actions">' + actions + '</div></div>';
           }
         });
         html += '</div></div>';
       });
-      content.innerHTML = html || (isTaskMode() ? '<p class="empty">Aucune étape dans ce workflow.</p>' : '<p class="empty">Aucune catégorie. Cliquez sur « + Catégorie ».</p>');
+      content.innerHTML = html || (isTaskMode() ? '<p class="empty">' + t('emptySteps') + '</p>' : '<p class="empty">' + t('emptyCategories') + '</p>');
+
+      const panel = document.getElementById('currentStepPanel');
+      if (isTaskMode() && workflow && task) {
+        const current = getCurrentStep(workflow, task);
+        panel.style.display = 'block';
+        if (current) {
+          const s = current.step;
+          const stepType = s.type || 'step';
+          const canRun = stepType === 'command' || stepType === 'prompt';
+          let panelHtml = '<div class="current-step-title">' + escapeHtml(t('currentStepTitle')) + '</div>';
+          panelHtml += '<div class="current-step-name">' + escapeHtml(s.name) + '</div>';
+          panelHtml += '<div class="current-step-meta"><span class="meta-label">' + escapeHtml(t('stepType')) + ':</span> ' + escapeHtml(getStepTypeLabel(stepType)) + '</div>';
+          if (s.description) panelHtml += '<div class="current-step-desc">' + escapeHtml(s.description) + '</div>';
+          else panelHtml += '<div class="current-step-desc"></div>';
+          panelHtml += '<div class="current-step-actions" data-step-id="' + s.id + '">';
+          if (canRun) panelHtml += '<button class="btn-run" type="button" title="' + t('execute') + '"><span class="codicon codicon-play"></span> ' + t('execute') + '</button>';
+          panelHtml += '<button class="btn-valid" type="button" title="' + t('validated') + '"><span class="codicon codicon-pass"></span> ' + t('validated') + '</button>';
+          panelHtml += '<button class="btn-passe" type="button" title="' + t('skipped') + '"><span class="codicon codicon-skip"></span> ' + t('skipped') + '</button>';
+          panelHtml += '<button class="btn-echec" type="button" title="' + t('failed') + '"><span class="codicon codicon-error"></span> ' + t('failed') + '</button>';
+          panelHtml += '</div>';
+          panel.innerHTML = panelHtml;
+          panel.classList.remove('all-done');
+          const actionsEl = panel.querySelector('.current-step-actions');
+          if (actionsEl) {
+            const stepId = actionsEl.getAttribute('data-step-id');
+            panel.querySelector('.btn-valid')?.addEventListener('click', function(e) { e.preventDefault(); vscode.postMessage({ type: 'setStepStatus', stepId, status: 'completed' }); });
+            panel.querySelector('.btn-passe')?.addEventListener('click', function(e) { e.preventDefault(); vscode.postMessage({ type: 'setStepStatus', stepId, status: 'skipped' }); });
+            panel.querySelector('.btn-echec')?.addEventListener('click', function(e) { e.preventDefault(); vscode.postMessage({ type: 'setStepStatus', stepId, status: 'error' }); });
+            panel.querySelector('.btn-run')?.addEventListener('click', function(e) { e.preventDefault(); vscode.postMessage({ type: 'executeStep', stepId }); });
+          }
+        } else {
+          panel.innerHTML = '<div class="current-step-title">' + escapeHtml(t('currentStepTitle')) + '</div><div class="current-step-desc">' + escapeHtml(t('allStepsDone')) + '</div>';
+          panel.classList.add('all-done');
+        }
+      } else {
+        panel.style.display = 'none';
+      }
 
       content.querySelectorAll('.category-toggle').forEach(btn => {
         btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const id = this.getAttribute('data-cat-id'); if (id) { toggleCategory(id); render(); } };
@@ -310,6 +400,7 @@
         render();
       }
     });
+    applyStaticL10n();
     render();
   </script>
 </body>

@@ -1,0 +1,10 @@
+{
+  "displayName": "Monkey Cook",
+  "description": "Cette extension aide les développeurs à suivre des workflows avant de développer et pousser de nouvelles fonctionnalités cassées.",
+  "command.createWorkflow": "Créer un workflow",
+  "command.startWorkflow": "Lancer un workflow",
+  "command.openWorkflowView": "Ouvrir l'onglet Workflow",
+  "command.addCategory": "Ajouter une catégorie",
+  "command.addStep": "Ajouter une étape",
+  "view.title": "Monkey Cook"
+}

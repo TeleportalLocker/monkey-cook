@@ -8,7 +8,7 @@ function normalizeStep(s: Partial<Step>): Step | StepCommand | StepPrompt {
   const base = { id: s.id!, name: s.name ?? '', description: s.description ?? '', type };
   if (type === 'command') {
     const sc = s as Partial<StepCommand>;
-    return { ...base, type: 'command', command: sc.command ?? '', autoCompleteOnSuccess: sc.autoCompleteOnSuccess ?? false };
+    return { ...base, type: 'command', command: sc.command ?? '', autoCompleteOnSuccess: sc.autoCompleteOnSuccess ?? true };
   }
   if (type === 'prompt') {
     const sp = s as Partial<StepPrompt>;

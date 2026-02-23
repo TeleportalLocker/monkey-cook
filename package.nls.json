@@ -1,0 +1,10 @@
+{
+  "displayName": "Monkey Cook",
+  "description": "This extension helps developers follow workflows before developing and pushing new broken features.",
+  "command.createWorkflow": "Create Workflow",
+  "command.startWorkflow": "Start Workflow",
+  "command.openWorkflowView": "Open Workflow tab",
+  "command.addCategory": "Add category",
+  "command.addStep": "Add step",
+  "view.title": "Monkey Cook"
+}

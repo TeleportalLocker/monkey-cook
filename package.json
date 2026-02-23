@@ -1,7 +1,7 @@
 {
   "name": "monkey-cook",
-  "displayName": "monkey-cook",
-  "description": "This extension help developpers to follow workflow before develop and push new broken features",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "version": "0.0.16",
   "publisher": "monkey-cook",
   "repository": {
@@ -29,30 +29,30 @@
     "commands": [
       {
         "command": "monkey-cook.createWorkflow",
-        "title": "Monkey Cook: Create Workflow"
+        "title": "Monkey Cook: %command.createWorkflow%"
       },
       {
         "command": "monkey-cook.startWorkflow",
-        "title": "Monkey Cook: Start Workflow"
+        "title": "Monkey Cook: %command.startWorkflow%"
       },
       {
         "command": "monkey-cook.openWorkflowView",
-        "title": "Monkey Cook: Ouvrir l'onglet Workflow"
+        "title": "Monkey Cook: %command.openWorkflowView%"
       },
       {
         "command": "monkey-cook.addCategory",
-        "title": "Monkey Cook: Ajouter une catégorie"
+        "title": "Monkey Cook: %command.addCategory%"
       },
       {
         "command": "monkey-cook.addStep",
-        "title": "Monkey Cook: Ajouter une étape"
+        "title": "Monkey Cook: %command.addStep%"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
           "id": "monkey-cook",
-          "title": "Monkey Cook",
+          "title": "%view.title%",
           "icon": "images/icon_white.png"
         }
       ]
@@ -61,7 +61,7 @@
       "monkey-cook": [
         {
           "id": "monkeyCookView",
-          "name": "Monkey Cook",
+          "name": "%view.title%",
           "type": "webview"
         }
       ]
@@ -69,7 +69,7 @@
     "explorer": [
       {
         "id": "monkeyCookView",
-        "name": "Monkey Cook",
+        "name": "%view.title%",
         "type": "webview"
       }
     ],

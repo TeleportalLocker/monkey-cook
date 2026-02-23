@@ -5,6 +5,7 @@ import { execSync } from 'child_process';
 import { randomUUID } from 'crypto';
 import { WorkflowStorage } from './storage';
 import { Workflow, WorkflowTask, Step, StepCommand, StepPrompt } from './models';
+import { getWebviewMessages } from './i18n';
 
 export class WorkflowWebviewViewProvider implements vscode.WebviewViewProvider {
   private _view: vscode.WebviewView | undefined;
@@ -52,6 +53,8 @@ export class WorkflowWebviewViewProvider implements vscode.WebviewViewProvider {
       activeWorkflowId: data.activeWorkflowId ?? '',
       activeTaskId: data.activeTaskId ?? '',
     };
+    const locale = (vscode.env.language || 'en').split('-')[0];
+    const l10n = getWebviewMessages(locale);
     const uiPath = path.join(__dirname, '..', 'ui', 'webview.html');
     const template = fs.readFileSync(uiPath, 'utf-8');
     const codiconCssUri = webview.asWebviewUri(
@@ -59,6 +62,7 @@ export class WorkflowWebviewViewProvider implements vscode.WebviewViewProvider {
     );
     return template
       .replace('{{INITIAL_DATA}}', JSON.stringify(payload))
+      .replace('{{L10N}}', JSON.stringify(l10n))
       .replace('{{CODICON_CSS_URI}}', codiconCssUri.toString());
   }
 
@@ -226,7 +230,7 @@ export class WorkflowWebviewViewProvider implements vscode.WebviewViewProvider {
                 ...step,
                 type: 'command',
                 command: cmd,
-                autoCompleteOnSuccess: existing.autoCompleteOnSuccess ?? false,
+                autoCompleteOnSuccess: existing.autoCompleteOnSuccess ?? true,
               } as StepCommand;
             }
           } else if (typePick.value === 'prompt') {
