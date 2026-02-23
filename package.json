@@ -6,7 +6,7 @@
   "publisher": "monkey-cook",
   "repository": {
     "type": "git",
-    "url": "https://github.com/monkey-cook/monkey-cook"
+    "url": "https://github.com/TeleportalLocker/monkey-cook.git"
   },
   "engines": {
     "vscode": ">=1.90.0"
