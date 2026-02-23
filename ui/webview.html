@@ -245,13 +245,13 @@
           const stepClasses = (done ? ' done' : '') + (skipped ? ' skipped' : '') + (echec ? ' echec' : '');
           if (canToggle) {
             var actions = '';
+            if (canRun) actions += '<button class="btn-run" type="button" title="Exécuter"><span class="codicon codicon-play"></span></button>';
             actions += '<button class="btn-valid" type="button" title="Validé"><span class="codicon codicon-pass"></span></button><button class="btn-passe" type="button" title="Passé"><span class="codicon codicon-skip"></span></button><button class="btn-echec" type="button" title="Échec"><span class="codicon codicon-error"></span></button>';
             html += '<div class="step' + stepClasses + '" data-step-id="' + step.id + '" data-category-id="' + cat.id + '" data-can-toggle="true">' +
               '<span class="step-name"> <span class="codicon codicon-circle-small"></span> ' + escapeHtml(step.name) + '</span>' +
               '<div class="step-actions">' + actions + '</div></div>';
           } else {
             var actions = '';
-            if (canRun) actions += '<button class="btn-run" type="button" title="Exécuter"><span class="codicon codicon-play"></span></button>';
             if (stepType === 'command') actions += '<button class="btn-test" type="button" title="Tester si la commande existe"><span class="codicon codicon-debug-alt"></span></button>';
             actions += '<button class="btn-edit" type="button" title="Éditer"><span class="codicon codicon-edit"></span></button><button class="btn-delete" type="button" title="Supprimer l\'étape"><span class="codicon codicon-trash"></span></button>';
             html += '<div class="step' + stepClasses + ' step-view-only" data-step-id="' + step.id + '" data-category-id="' + cat.id + '" data-can-toggle="false"><span class="step-name">' + escapeHtml(step.name) + '</span><div class="step-actions">' + actions + '</div></div>';
