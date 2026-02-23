@@ -4,6 +4,10 @@
   "description": "This extension help developpers to follow workflow before develop and push new broken features",
   "version": "0.0.12",
   "publisher": "monkey-cook",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/monkey-cook/monkey-cook"
+  },
   "engines": {
     "vscode": ">=1.90.0"
   },

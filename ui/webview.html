@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{CODICON_CSS_URI}}">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: var(--vscode-font-family); font-size: 13px; padding: 0; color: var(--vscode-foreground); background: var(--vscode-sideBar-background); margin: 0; display: flex; flex-direction: column; min-height: 100%; }
+    .aside-bar {
+      padding: 10px 8px;
+      background: var(--vscode-sideBarSectionHeader-background);
+      border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+      flex-shrink: 0;
+    }
+    .aside-bar .aside-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--vscode-descriptionForeground); margin-bottom: 8px; }
+    .aside-bar .row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .aside-bar .row:last-child { margin-bottom: 0; }
+    .aside-bar select {
+      flex: 1; min-width: 0; padding: 6px 8px;
+      background: var(--vscode-input-background); color: var(--vscode-input-foreground);
+      border: 1px solid var(--vscode-input-border); border-radius: 4px; font-size: 12px;
+    }
+    .aside-bar .btn-create {
+      padding: 6px 12px; cursor: pointer; width: 100%;
+      background: var(--vscode-button-background); color: var(--vscode-button-foreground);
+      border: none; border-radius: 4px; font-size: 12px; font-weight: 500;
+    }
+    .aside-bar .btn-create:hover { opacity: 0.9; }
+    .aside-bar .btn-launch {
+      padding: 6px 12px; cursor: pointer; width: 100%;
+      background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground);
+      border: none; border-radius: 4px; font-size: 12px; font-weight: 500;
+    }
+    .aside-bar .btn-launch:hover { opacity: 0.9; }
+    .main { padding: 8px; flex: 1; min-height: 0; overflow: auto; }
+    .main h2 { font-size: 13px; margin: 0 0 8px 0; font-weight: 600; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; align-items: center; }
+    button.secondary { padding: 6px 10px; cursor: pointer; background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 4px; font-size: 12px; white-space: nowrap; }
+    button.secondary:hover { opacity: 0.9; }
+    #content { margin-top: 8px; }
+    .category { margin: 10px 0; padding: 8px; background: var(--vscode-editor-inactiveSelectionBackground); border-radius: 4px; }
+    .category-title { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-weight: 600; flex-wrap: wrap; }
+    .category-title .category-name-row { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; }
+    .category-toggle { padding: 2px 4px; font-size: 14px; cursor: pointer; border: none; border-radius: 2px; background: transparent; color: var(--vscode-foreground); display: inline-flex; align-items: center; justify-content: center; }
+    .category-toggle:hover { background: var(--vscode-list-hoverBackground); }
+    .category-body { margin-top: 2px; }
+    .category.collapsed .category-body { display: none; }
+    .category.collapsed .category-toggle .codicon-chevron-down { display: none; }
+    .category:not(.collapsed) .category-toggle .codicon-chevron-right { display: none; }
+    .btn-delete-category { padding: 2px 6px; font-size: 14px; cursor: pointer; border: none; border-radius: 3px; background: transparent; color: var(--vscode-foreground); opacity: 0.7; display: inline-flex; align-items: center; }
+    .btn-delete-category:hover { color: var(--vscode-errorForeground); opacity: 1; }
+    .btn-delete-header { padding: 2px 6px; font-size: 14px; cursor: pointer; border: none; border-radius: 3px; background: transparent; color: var(--vscode-foreground); opacity: 0.7; display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+    .btn-delete-header:hover { color: var(--vscode-errorForeground); opacity: 1; }
+    .main-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .task-stats { font-weight: normal; color: var(--vscode-descriptionForeground); font-size: 12px; }
+    .task-stats .stat-passe { color: var(--vscode-descriptionForeground); margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
+    .task-stats .stat-erreur { color: var(--vscode-errorForeground); margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
+    .step { display: flex; align-items: center; margin: 4px 0; cursor: pointer; padding: 2px 0; border-radius: 2px; }
+    .step:hover { background: var(--vscode-list-hoverBackground); }
+    .step input[type="checkbox"] { margin-right: 8px; flex-shrink: 0; }
+    .step .step-name { flex: 1; min-width: 0; }
+    .step.done .step-name { color: var(--vscode-testing-iconPassed); text-decoration: line-through; }
+    .step.echec .step-name { color: var(--vscode-errorForeground); text-decoration: line-through; }
+    .step.skipped .step-name { font-style: italic; }
+    .step.step-view-only { cursor: default; }
+    .step.step-view-only:hover { background: transparent; }
+    .step.step-view-only input[type="checkbox"] { cursor: default; opacity: 0.6; }
+    .step-actions { display: flex; gap: 1px; margin-left: auto; flex-shrink: 0; align-items: center; }
+    .step-actions button { padding: 2px 3px; font-size: 16px; line-height: 1; cursor: pointer; background: transparent; color: var(--vscode-foreground); opacity: 0.7; transition: color 0.15s, opacity 0.15s; display: inline-flex; align-items: center; justify-content: center; border: none; outline: none; box-shadow: none; -webkit-appearance: none; appearance: none; font-family: inherit; }
+    .step-actions button:focus { outline: none; }
+    .step-actions button:focus-visible { outline: 1px solid var(--vscode-focusBorder); outline-offset: 1px; }
+    .step-actions button .codicon { font-size: 16px; pointer-events: none; }
+    .step-actions button:hover { opacity: 1; }
+    .step-actions .btn-valid:hover { color: var(--vscode-testing-iconPassed); }
+    .step.done .step-actions .btn-valid { color: var(--vscode-testing-iconPassed); opacity: 1; }
+    .step-actions .btn-passe:hover { color: var(--vscode-inputValidation-warningBorder); }
+    .step.skipped .step-actions .btn-passe { color: var(--vscode-inputValidation-warningBorder); opacity: 1; }
+    .step-actions .btn-echec:hover { color: var(--vscode-errorForeground); }
+    .step.echec .step-actions .btn-echec { color: var(--vscode-errorForeground); opacity: 1; }
+    .step-actions .btn-delete:hover { color: var(--vscode-errorForeground); }
+    .step-actions .btn-edit:hover { color: var(--vscode-editor-foreground); }
+    .step-actions .btn-run:hover { color: var(--vscode-testing-iconPassed); }
+    .step-actions .btn-test:hover { color: var(--vscode-editorInfo-foreground); }
+    .category-stats { font-weight: normal; font-size: 11px; color: var(--vscode-descriptionForeground); margin-left: 6px; display: inline-flex; align-items: center; gap: 8px; }
+    .category-stats .stat-ok { color: var(--vscode-testing-iconPassed); }
+    .category-stats .stat-skip { color: var(--vscode-inputValidation-warningBorder); }
+    .category-stats .stat-fail { color: var(--vscode-errorForeground); }
+    .empty { color: var(--vscode-descriptionForeground); font-size: 12px; padding: 8px 0; }
+  </style>
+</head>
+<body>
+  <aside class="aside-bar">
+    <div class="aside-title">Monkey Cook</div>
+    <div class="row">
+      <select id="workflowSelect" title="Workflow actif" aria-label="Sélectionner un workflow">
+        <option value="">-- Choisir un workflow --</option>
+      </select>
+    </div>
+    <div class="row">
+      <button id="btnCreateWorkflow" class="btn-create" title="Créer un workflow">+ Créer un workflow</button>
+    </div>
+    <div class="row">
+      <button id="btnLaunchWorkflow" class="btn-launch" title="Lancer un workflow (créer une tâche)">+ Lancer un workflow</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div id="mainTitle" class="main-title-row"></div>
+    <div class="toolbar" id="toolbar"></div>
+    <div id="content"></div>
+  </main>
+  <script>
+    const vscode = acquireVsCodeApi();
+    let data = {{INITIAL_DATA}};
+
+    function escapeHtml(s) { if (s == null) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function isTaskMode() { return !!data.activeTaskId; }
+    function getActiveTask() { return (data.tasks || []).find(t => t.id === data.activeTaskId); }
+    function getActiveWorkflow() {
+      if (isTaskMode()) {
+        const task = getActiveTask();
+        return task ? (data.workflows || []).find(w => w.id === task.workflowId) : null;
+      }
+      return (data.workflows || []).find(w => w.id === data.activeWorkflowId);
+    }
+    function isStepDone(stepId) {
+      if (isTaskMode()) {
+        const task = getActiveTask();
+        return task ? (task.completedStepIds || []).indexOf(stepId) >= 0 : false;
+      }
+      const w = (data.workflows || []).find(w => w.id === data.activeWorkflowId);
+      if (!w) return false;
+      for (const c of w.categories || []) for (const s of c.steps || []) if (s.id === stepId) return !!s.isDone;
+      return false;
+    }
+    function isStepSkipped(stepId) {
+      const task = getActiveTask();
+      return task ? (task.skippedStepIds || []).indexOf(stepId) >= 0 : false;
+    }
+    function isStepError(stepId) {
+      const task = getActiveTask();
+      return task ? (task.errorStepIds || []).indexOf(stepId) >= 0 : false;
+    }
+    function getWorkflowStepCount(workflow) {
+      if (!workflow || !workflow.categories) return 0;
+      return workflow.categories.reduce((n, c) => n + (c.steps || []).length, 0);
+    }
+    function getTaskStats(task, workflow) {
+      const total = getWorkflowStepCount(workflow);
+      const completed = (task.completedStepIds || []).length;
+      const skipped = (task.skippedStepIds || []).length;
+      const error = (task.errorStepIds || []).length;
+      return { total, completed, skipped, error };
+    }
+    let collapsedCategoryIds = new Set();
+    function toggleCategory(catId) {
+      if (collapsedCategoryIds.has(catId)) collapsedCategoryIds.delete(catId); else collapsedCategoryIds.add(catId);
+    }
+    function getCategoryStats(cat, task) {
+      if (!task || !cat || !cat.steps) return { ok: 0, skip: 0, fail: 0 };
+      let ok = 0, skip = 0, fail = 0;
+      const completed = task.completedStepIds || [];
+      const skipped = task.skippedStepIds || [];
+      const errorIds = task.errorStepIds || [];
+      cat.steps.forEach(s => {
+        if (completed.indexOf(s.id) >= 0) ok++;
+        else if (skipped.indexOf(s.id) >= 0) skip++;
+        else if (errorIds.indexOf(s.id) >= 0) fail++;
+      });
+      return { ok, skip, fail };
+    }
+
+    function render() {
+      const sel = document.getElementById('workflowSelect');
+      const currentVal = isTaskMode() ? 'task:' + data.activeTaskId : (data.activeWorkflowId ? 'workflow:' + data.activeWorkflowId : '');
+      sel.innerHTML = '<option value="">-- Choisir --</option>' +
+        '<optgroup label="Workflows (définir)">' +
+        (data.workflows || []).map(w => '<option value="workflow:' + w.id + '"' + (currentVal === 'workflow:' + w.id ? ' selected' : '') + '>' + escapeHtml(w.name) + '</option>').join('') +
+        '</optgroup>' +
+        '<optgroup label="Tâches (suivre)">' +
+        (data.tasks || []).map(t => {
+          const w = (data.workflows || []).find(w => w.id === t.workflowId);
+          const wName = w ? w.name : '?';
+          const st = getTaskStats(t, w || { categories: [] });
+          const label = escapeHtml(t.name) + ' (' + escapeHtml(wName) + ') ' + st.completed + '/' + st.total;
+          return '<option value="task:' + t.id + '"' + (currentVal === 'task:' + t.id ? ' selected' : '') + '>' + label + '</option>';
+        }).join('') +
+        '</optgroup>';
+      const workflow = getActiveWorkflow();
+      const task = getActiveTask();
+      const mainTitleEl = document.getElementById('mainTitle');
+      if (isTaskMode() && task && workflow) {
+        const stats = getTaskStats(task, workflow);
+        let titleHtml = '<h2 style="margin:0;">' + escapeHtml(task.name) + ' — ' + escapeHtml(workflow.name) + '</h2>';
+        titleHtml += '<span class="task-stats">' + stats.completed + '/' + stats.total + '</span>';
+        if (stats.skipped > 0) titleHtml += '<span class="task-stats stat-passe"><span class="codicon codicon-pass"></span> ' + stats.skipped + ' passé</span>';
+        if (stats.error > 0) titleHtml += '<span class="task-stats stat-erreur"><span class="codicon codicon-error"></span> ' + stats.error + ' erreur</span>';
+        titleHtml += '<button class="btn-delete-header btn-delete-task" type="button" title="Supprimer la tâche"><span class="codicon codicon-trash"></span> Supprimer</button>';
+        mainTitleEl.innerHTML = titleHtml;
+      } else if (workflow) {
+        mainTitleEl.innerHTML = '<h2 style="margin:0;">' + 'Workflow : ' + escapeHtml(workflow.name) + '</h2><button class="btn-delete-header btn-delete-workflow" type="button" title="Supprimer le workflow"><span class="codicon codicon-trash"></span> Supprimer</button>';
+      } else {
+        mainTitleEl.innerHTML = '<h2 style="margin:0;"></h2>';
+      }
+      mainTitleEl.querySelector('.btn-delete-task')?.addEventListener('click', function(e) { e.preventDefault(); vscode.postMessage({ type: 'deleteTask', taskId: data.activeTaskId }); });
+      mainTitleEl.querySelector('.btn-delete-workflow')?.addEventListener('click', function(e) { e.preventDefault(); vscode.postMessage({ type: 'deleteWorkflow', workflowId: data.activeWorkflowId }); });
+      const toolbar = document.getElementById('toolbar');
+      if (isTaskMode()) {
+        toolbar.innerHTML = '';
+      } else {
+        toolbar.innerHTML = '<button id="btnAddCategory" class="secondary" title="Ajouter une catégorie">+ Catégorie</button>';
+        toolbar.querySelector('#btnAddCategory').onclick = function() { vscode.postMessage({ type: 'addCategory' }); };
+      }
+      const content = document.getElementById('content');
+      if (!workflow) {
+        content.innerHTML = '<p class="empty">Sélectionnez un workflow ou une tâche ci-dessus, ou créez-en un / lancez un workflow.</p>';
+        return;
+      }
+      let html = '';
+      (workflow.categories || []).forEach(cat => {
+        const isCollapsed = collapsedCategoryIds.has(cat.id);
+        const task = getActiveTask();
+        const catStats = isTaskMode() && task ? getCategoryStats(cat, task) : null;
+        html += '<div class="category' + (isCollapsed ? ' collapsed' : '') + '" data-category-id="' + cat.id + '"><div class="category-title">';
+        html += '<div class="category-name-row">';
+        html += '<button class="category-toggle" type="button" title="' + (isCollapsed ? 'Déplier' : 'Replier') + '" data-cat-id="' + cat.id + '"><span class="codicon codicon-chevron-down"></span><span class="codicon codicon-chevron-right"></span></button>';
+        html += '<span>' + escapeHtml(cat.name) + '</span>';
+        if (catStats) {
+          html += '<span class="category-stats"><span class="stat-ok"><span class="codicon codicon-pass"></span> ' + catStats.ok + '</span><span class="stat-skip"><span class="codicon codicon-skip"></span> ' + catStats.skip + '</span><span class="stat-fail"><span class="codicon codicon-error"></span> ' + catStats.fail + '</span></span>';
+        }
+        html += '</div>';
+        if (!isTaskMode()) {
+          html += '<button class="btnAddStep secondary" data-cat-id="' + cat.id + '" title="Ajouter une étape">+ Étape</button>';
+          html += '<button class="btn-delete-category" type="button" title="Supprimer la catégorie" data-cat-id="' + cat.id + '"><span class="codicon codicon-trash"></span></button>';
+        }
+        html += '</div><div class="category-body">';
+        (cat.steps || []).forEach(step => {
+          const done = isStepDone(step.id);
+          const skipped = isStepSkipped(step.id);
+          const echec = isStepError(step.id);
+          const canToggle = isTaskMode();
+          const stepType = step.type || 'step';
+          const canRun = stepType === 'command' || stepType === 'prompt';
+          const stepClasses = (done ? ' done' : '') + (skipped ? ' skipped' : '') + (echec ? ' echec' : '');
+          if (canToggle) {
+            var actions = '';
+            if (canRun) actions += '<button class="btn-run" type="button" title="Exécuter"><span class="codicon codicon-play"></span></button>';
+            actions += '<button class="btn-valid" type="button" title="Validé"><span class="codicon codicon-pass"></span></button><button class="btn-passe" type="button" title="Passé"><span class="codicon codicon-skip"></span></button><button class="btn-echec" type="button" title="Échec"><span class="codicon codicon-error"></span></button>';
+            html += '<div class="step' + stepClasses + '" data-step-id="' + step.id + '" data-category-id="' + cat.id + '" data-can-toggle="true">' +
+              '<span class="step-name"> <span class="codicon codicon-circle-small"></span> ' + escapeHtml(step.name) + '</span>' +
+              '<div class="step-actions">' + actions + '</div></div>';
+          } else {
+            var actions = '';
+            if (canRun) actions += '<button class="btn-run" type="button" title="Exécuter"><span class="codicon codicon-play"></span></button>';
+            if (stepType === 'command') actions += '<button class="btn-test" type="button" title="Tester si la commande existe"><span class="codicon codicon-debug-alt"></span></button>';
+            actions += '<button class="btn-edit" type="button" title="Éditer"><span class="codicon codicon-edit"></span></button><button class="btn-delete" type="button" title="Supprimer l\'étape"><span class="codicon codicon-trash"></span></button>';
+            html += '<div class="step' + stepClasses + ' step-view-only" data-step-id="' + step.id + '" data-category-id="' + cat.id + '" data-can-toggle="false"><span class="step-name">' + escapeHtml(step.name) + '</span><div class="step-actions">' + actions + '</div></div>';
+          }
+        });
+        html += '</div></div>';
+      });
+      content.innerHTML = html || (isTaskMode() ? '<p class="empty">Aucune étape dans ce workflow.</p>' : '<p class="empty">Aucune catégorie. Cliquez sur « + Catégorie ».</p>');
+
+      content.querySelectorAll('.category-toggle').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const id = this.getAttribute('data-cat-id'); if (id) { toggleCategory(id); render(); } };
+      });
+      content.querySelectorAll('.btn-delete-category').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const id = this.getAttribute('data-cat-id'); if (id) vscode.postMessage({ type: 'deleteCategory', categoryId: id }); };
+      });
+      content.querySelectorAll('.step[data-can-toggle="true"] .btn-valid').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const step = this.closest('.step'); if (step) { const status = step.classList.contains('done') ? 'cancelled' : 'completed'; vscode.postMessage({ type: 'setStepStatus', stepId: step.getAttribute('data-step-id'), status }); } };
+      });
+      content.querySelectorAll('.step[data-can-toggle="true"] .btn-passe').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const step = this.closest('.step'); if (step) { const status = step.classList.contains('skipped') ? 'cancelled' : 'skipped'; vscode.postMessage({ type: 'setStepStatus', stepId: step.getAttribute('data-step-id'), status }); } };
+      });
+      content.querySelectorAll('.step[data-can-toggle="true"] .btn-echec').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const step = this.closest('.step'); if (step) { const status = step.classList.contains('echec') ? 'cancelled' : 'error'; vscode.postMessage({ type: 'setStepStatus', stepId: step.getAttribute('data-step-id'), status }); } };
+      });
+      content.querySelectorAll('.step .btn-delete').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const step = this.closest('.step'); if (step) { const stepId = step.getAttribute('data-step-id'); const categoryId = step.getAttribute('data-category-id'); if (stepId && categoryId) vscode.postMessage({ type: 'deleteStep', stepId, categoryId }); } };
+      });
+      content.querySelectorAll('.step .btn-edit').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const step = this.closest('.step'); if (step) { const stepId = step.getAttribute('data-step-id'); const categoryId = step.getAttribute('data-category-id'); if (stepId && categoryId) vscode.postMessage({ type: 'editStep', stepId, categoryId }); } };
+      });
+      content.querySelectorAll('.step .btn-run').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const step = this.closest('.step'); if (step) { const stepId = step.getAttribute('data-step-id'); if (stepId) vscode.postMessage({ type: 'executeStep', stepId }); } };
+      });
+      content.querySelectorAll('.step .btn-test').forEach(btn => {
+        btn.onclick = function(e) { e.preventDefault(); e.stopPropagation(); const step = this.closest('.step'); if (step) { const stepId = step.getAttribute('data-step-id'); if (stepId) vscode.postMessage({ type: 'testStepCommand', stepId }); } };
+      });
+      content.querySelectorAll('.btnAddStep').forEach(el => {
+        el.onclick = function(e) { e.preventDefault(); e.stopPropagation(); vscode.postMessage({ type: 'addStep', categoryId: this.getAttribute('data-cat-id') }); };
+      });
+    }
+
+    document.getElementById('workflowSelect').onchange = function() {
+      const raw = this.value;
+      if (!raw) { return; }
+      const [kind, id] = raw.split(':');
+      if (kind === 'workflow') { vscode.postMessage({ type: 'setActiveWorkflow', workflowId: id }); }
+      if (kind === 'task') { vscode.postMessage({ type: 'setActiveTask', taskId: id }); }
+    };
+    document.getElementById('btnCreateWorkflow').onclick = function() { vscode.postMessage({ type: 'createWorkflow' }); };
+    document.getElementById('btnLaunchWorkflow').onclick = function() { vscode.postMessage({ type: 'launchWorkflow' }); };
+
+    window.addEventListener('message', function(e) {
+      const m = e.data;
+      if (m.type === 'update') {
+        data = { workflows: m.workflows || [], tasks: m.tasks || [], activeWorkflowId: m.activeWorkflowId || '', activeTaskId: m.activeTaskId || '' };
+        render();
+      }
+    });
+    render();
+  </script>
+</body>
+</html>
