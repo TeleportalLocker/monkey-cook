@@ -2,7 +2,7 @@
   "name": "monkey-cook",
   "displayName": "monkey-cook",
   "description": "This extension help developpers to follow workflow before develop and push new broken features",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "publisher": "monkey-cook",
   "engines": {
     "vscode": ">=1.90.0"
