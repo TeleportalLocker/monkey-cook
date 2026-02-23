@@ -2,7 +2,7 @@
   "name": "monkey-cook",
   "displayName": "monkey-cook",
   "description": "This extension help developpers to follow workflow before develop and push new broken features",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "publisher": "monkey-cook",
   "repository": {
     "type": "git",
