@@ -116,6 +116,9 @@
     .current-step-panel .current-step-actions .btn-echec { background: var(--vscode-errorForeground); color: var(--vscode-editor-background); }
     .current-step-panel .current-step-actions button:hover { opacity: 0.9; }
     .current-step-panel.all-done .current-step-desc { font-style: italic; }
+    .current-step-panel .current-step-command { margin: 8px 0 10px 0; }
+    .current-step-panel .current-step-command .command-label { font-size: 12px; font-weight: 500; color: var(--vscode-foreground); margin-bottom: 4px; }
+    .current-step-panel .current-step-command pre { margin: 0; padding: 8px 10px; background: var(--vscode-textCodeBlock-background); border: 1px solid var(--vscode-panel-border); border-radius: 4px; font-family: var(--vscode-editor-font-family, var(--vscode-font-family)); font-size: 12px; line-height: 1.4; color: var(--vscode-editor-foreground); overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
   </style>
 </head>
 <body>
@@ -339,8 +342,11 @@
           let panelHtml = '<div class="current-step-title">' + escapeHtml(t('currentStepTitle')) + '</div>';
           panelHtml += '<div class="current-step-name">' + escapeHtml(s.name) + '</div>';
           panelHtml += '<div class="current-step-meta"><span class="meta-label">' + escapeHtml(t('stepType')) + ':</span> ' + escapeHtml(getStepTypeLabel(stepType)) + '</div>';
-          if (s.description) panelHtml += '<div class="current-step-desc"><span class="meta-label">' + escapeHtml(t('stepDescription')) + ':</span> ' + escapeHtml(s.description) + '</div>';
+          if (s.description) panelHtml += '<div class="current-step-meta"><span class="meta-label">' + escapeHtml(t('stepDescription')) + ':</span> ' + escapeHtml(s.description) + '</div>';
           else panelHtml += '<div class="current-step-desc"></div>';
+          if (stepType === 'command' && s.command) {
+            panelHtml += '<div class="current-step-command"><div class="command-label">' + escapeHtml(t('stepTypeCommand')) + ':</div><pre>' + escapeHtml(s.command) + '</pre></div>';
+          }
           panelHtml += '<div class="current-step-actions" data-step-id="' + s.id + '">';
           if (canRun) panelHtml += '<button class="btn-run" type="button" title="' + t('execute') + '"><span class="codicon codicon-play"></span> ' + t('execute') + '</button>';
           panelHtml += '<button class="btn-valid" type="button" title="' + t('validated') + '"><span class="codicon codicon-pass"></span> ' + t('validated') + '</button>';
