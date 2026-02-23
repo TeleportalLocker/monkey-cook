@@ -56,8 +56,10 @@
     .task-stats { font-weight: normal; color: var(--vscode-descriptionForeground); font-size: 12px; }
     .task-stats .stat-passe { color: var(--vscode-descriptionForeground); margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
     .task-stats .stat-erreur { color: var(--vscode-errorForeground); margin-left: 6px; display: inline-flex; align-items: center; gap: 2px; }
-    .step { display: flex; align-items: center; margin: 4px 0; cursor: pointer; padding: 2px 0; border-radius: 2px; }
+    .step { display: flex; align-items: center; margin: 4px 0; cursor: pointer; padding: 4px 6px; border-radius: 4px; }
     .step:hover { background: var(--vscode-list-hoverBackground); }
+    .step.step-current { background: var(--vscode-list-inactiveSelectionBackground); }
+    .step.step-current:hover { background: var(--vscode-list-activeSelectionBackground); }
     .step input[type="checkbox"] { margin-right: 8px; flex-shrink: 0; }
     .step .step-name { flex: 1; min-width: 0; }
     .step.done .step-name { color: var(--vscode-testing-iconPassed); text-decoration: line-through; }
@@ -82,6 +84,16 @@
     .step-actions .btn-edit:hover { color: var(--vscode-editor-foreground); }
     .step-actions .btn-run:hover { color: var(--vscode-testing-iconPassed); }
     .step-actions .btn-test:hover { color: var(--vscode-editorInfo-foreground); }
+    /* Task mode: current step highlight + colored action buttons with darker hover */
+    .step[data-can-toggle="true"] .step-actions button { border-radius: 3px; padding: 4px 5px; transition: filter 0.15s, background 0.15s; }
+    .step[data-can-toggle="true"] .step-actions .btn-run { color: #fff; background: #0e639c; }
+    .step[data-can-toggle="true"] .step-actions .btn-run:hover { filter: brightness(0.85); }
+    .step[data-can-toggle="true"] .step-actions .btn-valid { color: #fff; background: var(--vscode-testing-iconPassed); }
+    .step[data-can-toggle="true"] .step-actions .btn-valid:hover { filter: brightness(0.85); }
+    .step[data-can-toggle="true"] .step-actions .btn-passe { color: #fff; background: var(--vscode-inputValidation-warningBorder); }
+    .step[data-can-toggle="true"] .step-actions .btn-passe:hover { filter: brightness(0.85); }
+    .step[data-can-toggle="true"] .step-actions .btn-echec { color: #fff; background: var(--vscode-errorForeground); }
+    .step[data-can-toggle="true"] .step-actions .btn-echec:hover { filter: brightness(0.85); }
     .category-stats { font-weight: normal; font-size: 11px; color: var(--vscode-descriptionForeground); margin-left: 6px; display: inline-flex; align-items: center; gap: 8px; }
     .category-stats .stat-ok { color: var(--vscode-testing-iconPassed); }
     .category-stats .stat-skip { color: var(--vscode-inputValidation-warningBorder); }
@@ -271,6 +283,7 @@
         return;
       }
       let html = '';
+      const currentStepId = (isTaskMode() && task && workflow) ? (getCurrentStep(workflow, task)?.step?.id || null) : null;
       (workflow.categories || []).forEach(cat => {
         const isCollapsed = collapsedCategoryIds.has(cat.id);
         const task = getActiveTask();
@@ -295,7 +308,8 @@
           const canToggle = isTaskMode();
           const stepType = step.type || 'step';
           const canRun = stepType === 'command' || stepType === 'prompt';
-          const stepClasses = (done ? ' done' : '') + (skipped ? ' skipped' : '') + (echec ? ' echec' : '');
+          const isCurrent = step.id === currentStepId;
+          const stepClasses = (done ? ' done' : '') + (skipped ? ' skipped' : '') + (echec ? ' echec' : '') + (isCurrent ? ' step-current' : '');
           if (canToggle) {
             var actions = '';
             if (canRun) actions += '<button class="btn-run" type="button" title="' + t('execute') + '"><span class="codicon codicon-play"></span></button>';
@@ -325,7 +339,7 @@
           let panelHtml = '<div class="current-step-title">' + escapeHtml(t('currentStepTitle')) + '</div>';
           panelHtml += '<div class="current-step-name">' + escapeHtml(s.name) + '</div>';
           panelHtml += '<div class="current-step-meta"><span class="meta-label">' + escapeHtml(t('stepType')) + ':</span> ' + escapeHtml(getStepTypeLabel(stepType)) + '</div>';
-          if (s.description) panelHtml += '<div class="current-step-desc">' + escapeHtml(s.description) + '</div>';
+          if (s.description) panelHtml += '<div class="current-step-desc"><span class="meta-label">' + escapeHtml(t('stepDescription')) + ':</span> ' + escapeHtml(s.description) + '</div>';
           else panelHtml += '<div class="current-step-desc"></div>';
           panelHtml += '<div class="current-step-actions" data-step-id="' + s.id + '">';
           if (canRun) panelHtml += '<button class="btn-run" type="button" title="' + t('execute') + '"><span class="codicon codicon-play"></span> ' + t('execute') + '</button>';
