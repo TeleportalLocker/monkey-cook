@@ -2,7 +2,7 @@
   "name": "monkey-cook",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "publisher": "monkey-cook",
   "repository": {
     "type": "git",
